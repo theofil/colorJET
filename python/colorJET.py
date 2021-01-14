@@ -25,9 +25,11 @@ import matplotlib.pyplot as plt
 import matplotlib
 
 import pdb
+
 ### define here filename and max number of events to process
 #fileName = "/eos/cms/store/cmst3/user/gpetrucc/l1tr/105X/NewInputs104X/010319/VBF_HToInvisible_PU0/inputs104X_VBF_HToInvisible_PU0_job1.root"
-fileName = '/eos/cms/store/cmst3/group/l1tr/gpetrucc/11_1_0/NewInputs110X/150720.done/VBF_HToInvisible_PU200/inputs110X_1.root'
+#fileName = '/eos/cms/store/cmst3/group/l1tr/gpetrucc/11_1_0/NewInputs110X/150720.done/VBF_HToInvisible_PU200/inputs110X_1.root'
+fileName = '/eos/cms/store/cmst3/group/l1tr/gpetrucc/11_1_0/NewInputs110X/150720.done/QCD_Pt15to3000_PU200/inputs110X_1.root'
 #fileName = '/eos/cms/store/cmst3/user/gpetrucc/l1tr/105X/NewInputs104X/010319/WToLNu_PU200/inputs104X_WToLNu_PU200_job14.root'
 #fileName = '/eos/cms/store/cmst3/user/gpetrucc/l1tr/105X/NewInputs104X/010319/VBFHToBB_PU200/inputs104X_VBFHToBB_PU200_job1.root'
 #fileName = 'root://cms-xrd-global.cern.ch//store/mc/RunIISummer16MiniAODv3/ZZTo2Q2Nu_13TeV_amcatnloFXFX_madspin_pythia8/MINIAODSIM/PUMoriond17_94X_mcRun2_asymptotic_v3-v2/270000/685D035E-FBE3-E811-83B4-48FD8E282493.root'
@@ -38,8 +40,10 @@ fileName = '/eos/cms/store/cmst3/group/l1tr/gpetrucc/11_1_0/NewInputs110X/150720
 
 # configuration
 #edmStyle = 'MiniAOD'
-edmStyle = 'AOD'
+edmStyle  = 'AOD'
 makePlots = False
+folders   = ['ZZ', 'VBFHinv', 'Minbias','QCD', 'VBFHbb']
+folder    = folders[3]
 maxEvents =  50e6
 debug = False
 
@@ -73,7 +77,8 @@ count.alleve   = 0
 
 
 ### ntpl vars
-treefile = ROOT.TFile('tree.root', 'recreate')
+filename = 'tree.root' if folder =='' else 'tree_'+folder+'.root'
+treefile = ROOT.TFile(filename, 'recreate')
 
 mcWeights = ROOT.TH1I('mcWeights','mcWeights', 4, -2,2);
 
@@ -419,12 +424,13 @@ for iev,event in enumerate(events):
 
     
     if makePlots:
+        plt.rc('font', size=16)
         ### make first subplot
         f, (ax1) = plt.subplots(1, 1, sharex=True, sharey=True, figsize=(11,7))
         cmap = matplotlib.cm.get_cmap('viridis')
     
-        #collection = [p for p in genps if p.pt()>0.0]
-        collection = [p for p in jcs]
+        collection = [p for p in genps if p.pt()>0.0]
+        #collection = [p for p in jcs]
         etas     = map(lambda p:p.y()  , collection) ### it's rapidity that is used in reality
         phis     = map(lambda p:p.phi(), collection)
         pts      = map(lambda p:p.pt() , collection)
@@ -462,7 +468,7 @@ for iev,event in enumerate(events):
             xs   = np.linspace( min(x1, x2), max(x1, x2), 101)
             ys =  k*(xs - x1) + y1
             ax1.plot( xs , ys , color)
-            ax1.plot( x1 + 0.4 * np.cos(theta), y1 + 0.4* np.sin(theta), color = 'y', linestyle = 'dashed')
+            #ax1.plot( x1 + 0.4 * np.cos(theta), y1 + 0.4* np.sin(theta), color = 'y', linestyle = 'dashed')
     
             r = ((x2 - x1)**2 + (y2 - y1)**2)**0.5
             cosT  = (x2 - x1)/r
@@ -507,9 +513,14 @@ for iev,event in enumerate(events):
         ax1.set_xlim(-4.7,4.7)
         ax1.set_ylim(-3.2, 3.2)
          
-        if len(genjs)>1: f.suptitle('mjj %2.1f  ptjj %2.1f  dYjj %2.1f j_pt = (%2.1f, %2.1f)'%(t_mjj[0], t_ptjj[0], t_dYjj[0], 
-        genjs[0].pt(), genjs[1].pt()))
-        plt.savefig('/afs/cern.ch/user/t/theofil/www/images/figs5/neve%d.png'%iev)
+        rad2degrees = 180./np.pi
+        if len(genjs)>1: f.suptitle('mjj %2.1f  ptjj %2.1f  dYjj %2.1f dPjj = %2.1f  \n cosTheta21 = %2.3f cosTheta12 = %2.3f  \n j1  = (%2.1f, %2.1f, %2.1f, %2.2f) j2  = (%2.1f, %2.1f, %2.1f, %2.2f)'%(t_mjj[0], t_ptjj[0], 
+        t_dYjj[0], t_dPhijj[0],
+        t_c21[0], t_c12[0],
+        genjs[0].pt(), genjs[0].rapidity(), genjs[0].phi(), t_jetPVA[0]*rad2degrees, 
+        genjs[1].pt(), genjs[1].rapidity(), genjs[1].phi(), t_jetPVA[1]*rad2degrees, 
+        ), size = 12)
+        plt.savefig('/afs/cern.ch/user/t/theofil/www/images/'+folder+'/neve%d.png'%iev)
         plt.close('all')
 
 
