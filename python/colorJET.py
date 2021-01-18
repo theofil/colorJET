@@ -216,8 +216,14 @@ for ii, fileName in enumerate(fileNames):
     t_ptjj        = array('f', [0.]) ; tvars += [t_ptjj]     
     t_dYjj        = array('f', [0.]) ; tvars += [t_dYjj]    
     t_dPhijj      = array('f', [0.]) ; tvars += [t_dPhijj]   
+    t_mbb         = array('f', [0.]) ; tvars += [t_mbb]      
+    t_ptbb        = array('f', [0.]) ; tvars += [t_ptbb]     
+    t_dYbb        = array('f', [0.]) ; tvars += [t_dYbb]    
+    t_dPhibb      = array('f', [0.]) ; tvars += [t_dPhibb]   
     t_c21         = array('f', [-3.]); tvars += [t_c21]      
     t_c12         = array('f', [-3.]); tvars += [t_c12]      
+    t_b21         = array('f', [-3.]); tvars += [t_b21]      
+    t_b12         = array('f', [-3.]); tvars += [t_b12]      
     t_met         = array('f', [0.]) ; tvars += [t_met]      
     t_metphi      = array('f', [0.]) ; tvars += [t_metphi]   
     t_weight      = array('f', [1.]) ; tvars += [t_weight]   
@@ -245,12 +251,18 @@ for ii, fileName in enumerate(fileNames):
     tree.Branch("jetFlag",    t_jetFlag,    "jetFlag[nJets]/I")
     tree.Branch("jetBtag",    t_jetBtag,    "jetBtag[nJets]/O")
     tree.Branch("jetMuIndex", t_jetMuIndex, "jetMuIndex[nJets]/I")
-    tree.Branch("mjj",        t_mjj,        "mjj/F")
     tree.Branch("c21",        t_c21,        "c21/F")
     tree.Branch("c12",        t_c12,        "c12/F")
+    tree.Branch("b21",        t_b21,        "b21/F")
+    tree.Branch("b12",        t_b12,        "b12/F")
+    tree.Branch("mjj",        t_mjj,        "mjj/F")
     tree.Branch("ptjj",       t_ptjj,       "ptjj/F")
     tree.Branch("dYjj",       t_dYjj,       "dYjj/F")
     tree.Branch("dPhijj",     t_dPhijj,     "dPhijj/F")
+    tree.Branch("mbb",        t_mbb,        "mbb/F")
+    tree.Branch("ptbb",       t_ptbb,       "ptbb/F")
+    tree.Branch("dYbb",       t_dYbb,       "dYbb/F")
+    tree.Branch("dPhibb",     t_dPhibb,     "dPhibb/F")
     tree.Branch("met",        t_met,        "met/F")
     tree.Branch("metphi",     t_metphi,     "metphi/F")
     tree.Branch("weight",     t_weight,     "weight/F")
@@ -417,8 +429,21 @@ for ii, fileName in enumerate(fileNames):
             j2 = genjs[1]
             cos21 = RPA(j1, j2)
             cos12 = RPA(j2, j1)
-            t_c21[0]  = round(cos21 , 2)
-            t_c12[0]  = round(cos12 , 2)
+            t_c21[0]  = round(np.arccos(cos21) , 2)
+            t_c12[0]  = round(np.arccos(cos12) , 2)
+
+
+        if len(bjets) >= 2:
+            t_mbb[0]  = round(sumP4(bjets[0:2]).mass() , 1)
+            t_ptbb[0] = round(sumP4(bjets[0:2]).pt() , 1)
+            t_dYbb[0]   = 0. if len(bjets) < 2 else round(bjets[0].rapidity() - bjets[1].rapidity()  , 1)
+            t_dPhibb[0] = 0. if len(bjets) < 2 else round(deltaPhi(bjets[0].phi(), bjets[1].phi())   , 1)
+            b1 = bjets[0]
+            b2 = bjets[1]
+            cos21 = RPA(b1, b2)
+            cos12 = RPA(b2, b1)
+            t_b21[0]  = round(np.arccos(cos21) , 2)
+            t_b12[0]  = round(np.arccos(cos12) , 2)
         tree.Fill()
     
         
@@ -519,6 +544,13 @@ for ii, fileName in enumerate(fileNames):
             genjs[0].pt(), genjs[0].rapidity(), genjs[0].phi(), t_jetPVA[0]*rad2degrees, 
             genjs[1].pt(), genjs[1].rapidity(), genjs[1].phi(), t_jetPVA[1]*rad2degrees, 
             ), size = 12)
+            if len(bjets)>1: f.suptitle('mbb %2.1f  ptbb %2.1f  dYbb %2.1f dPbb = %2.1f  \n cosTheta21 = %2.3f cosTheta12 = %2.3f  \n j1  = (%2.1f, %2.1f, %2.1f, %2.2f) j2  = (%2.1f, %2.1f, %2.1f, %2.2f)'%(t_mbb[0], t_ptbb[0], 
+            t_dYbb[0], t_dPhibb[0],
+            t_c21[0], t_c12[0],
+            bjets[0].pt(), bjets[0].rapidity(), bjets[0].phi(), t_jetPVA[0]*rad2degrees, 
+            bjets[1].pt(), bjets[1].rapidity(), bjets[1].phi(), t_jetPVA[1]*rad2degrees, 
+            ), size = 12)
+
             plt.savefig('/afs/cern.ch/user/t/theofil/www/images/'+folder+'/neve%d.png'%iev)
             plt.close('all')
     
