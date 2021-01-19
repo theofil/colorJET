@@ -29,9 +29,9 @@ import pdb
 ### define here filename and max number of events to process
 #fileName = "/eos/cms/store/cmst3/user/gpetrucc/l1tr/105X/NewInputs104X/010319/VBF_HToInvisible_PU0/inputs104X_VBF_HToInvisible_PU0_job1.root"
 #fileName = '/eos/cms/store/cmst3/group/l1tr/gpetrucc/11_1_0/NewInputs110X/150720.done/VBF_HToInvisible_PU200/inputs110X_1.root'
-fileName = '/eos/cms/store/cmst3/group/l1tr/gpetrucc/11_1_0/NewInputs110X/150720.done/QCD_Pt15to3000_PU200/inputs110X_1.root'
+#fileName = '/eos/cms/store/cmst3/group/l1tr/gpetrucc/11_1_0/NewInputs110X/150720.done/QCD_Pt15to3000_PU200/inputs110X_1.root'
 #fileName = '/eos/cms/store/cmst3/user/gpetrucc/l1tr/105X/NewInputs104X/010319/WToLNu_PU200/inputs104X_WToLNu_PU200_job14.root'
-#fileName = '/eos/cms/store/cmst3/user/gpetrucc/l1tr/105X/NewInputs104X/010319/VBFHToBB_PU200/inputs104X_VBFHToBB_PU200_job1.root'
+fileName = '/eos/cms/store/cmst3/user/gpetrucc/l1tr/105X/NewInputs104X/010319/VBFHToBB_PU200/inputs104X_VBFHToBB_PU200_job1.root'
 #fileName = 'root://cms-xrd-global.cern.ch//store/mc/RunIISummer16MiniAODv3/ZZTo2Q2Nu_13TeV_amcatnloFXFX_madspin_pythia8/MINIAODSIM/PUMoriond17_94X_mcRun2_asymptotic_v3-v2/270000/685D035E-FBE3-E811-83B4-48FD8E282493.root'
 #fileName = 'root://cms-xrd-global.cern.ch//store/relval/CMSSW_11_1_0/RelValQCD_FlatPt15to3000_13UP18_RD/GEN-SIM/111X_upgrade2018_realistic_RunDep_v1-v1/10000/005600A2-F19A-2B44-92A8-CF227D764F73.root'
 #fileName = 'root://cms-xrd-global.cern.ch//store/mc/Phase2HLTTDRWinter20DIGI/VBF_HToInvisible_M125_TuneCUETP8M1_14TeV_powheg_pythia8/GEN-SIM-DIGI-RAW/PU140_110X_mcRun4_realistic_v3_ext1-v2/270000/011556F3-DF8D-244F-80EB-B7DAAF20AD63.root'
@@ -39,17 +39,17 @@ fileName = '/eos/cms/store/cmst3/group/l1tr/gpetrucc/11_1_0/NewInputs110X/150720
 #fileName = '/afs/cern.ch/work/t/theofil/CMSSW/CMSSW_10_1_7/src/FastPUPPI/NtupleProducer/python/scripts/COlOR/ROOTs/ZZqqnunu.root'
 
 
-fileName2 = '/eos/cms/store/cmst3/group/l1tr/gpetrucc/11_1_0/NewInputs110X/150720.done/QCD_Pt15to3000_PU200/inputs110X_2.root'
+#fileName2 = '/eos/cms/store/cmst3/group/l1tr/gpetrucc/11_1_0/NewInputs110X/150720.done/QCD_Pt15to3000_PU200/inputs110X_2.root'
 #fileNames = [fileName, fileName2]
 fileNames = [fileName]
 
 # configuration
 #edmStyle = 'MiniAOD'
 edmStyle  = 'AOD'
-makePlots = False
-folders   = ['ZZ', 'VBFHinv', 'Minbias','QCD', 'VBFHbb']
-folder    = folders[3]
-maxEvents =  50e5
+makePlots = True
+folders   = ['ZZ', 'VBFHinv','VBFHinv2', 'Minbias','QCD', 'VBFHbb']
+folder    = folders[5]
+maxEvents =  50e3
 debug = False
 useAK8 = False
 chargedOnly = False
@@ -87,6 +87,13 @@ def RPA(j1, j2):
     mag_p = (p.T).dot(p)[0][0]**0.5
     mag_r = (r.T).dot(r)[0][0]**0.5
     cos21 = (r.T).dot(p)[0][0]/(mag_p*mag_r)
+    theta21 = np.arccos(cos21)*(180/np.pi)
+    print('cos21 %2.3f theta21 %2.3f np.arccos(cos21) %2.3f'%(cos21, theta21, np.arccos(cos21)))
+    #extp = np.cross(r, p, axis=0)
+    #print('extp = ', extp, ' (extp.T).dot(extp) = ', (extp.T).dot(extp))
+    #sin21 = (extp.T).dot(extp)**0.5/(mag_p*mag_r)
+    #theta21 = np.arctan2(sin21, cos21)*(180/np.pi)
+    #print('theta21 %2.3f   arccosetheta21 %2.3f'%(theta21, np.arccos(cos21)*(180/np.pi)))
     if debug:
         print('p = ', p)
         print('v2 = ', v2)
@@ -95,7 +102,7 @@ def RPA(j1, j2):
         print('mag_r = ', mag_r)
         print('mag_rp = ', mag_p)
         print('(r.T).dot(p)[0][0] = ', (r.T).dot(p)[0][0])
-    return cos21
+    return theta21
 
 
 # check if "a" is mother of "p" 
@@ -389,6 +396,9 @@ for ii, fileName in enumerate(fileNames):
     
         # make a set of bjets {}
         bjets = {j for j in genjs for i in range(j.numberOfDaughters()) for bhad in bhadrons if dauPtrExists(j,i) if isAncestor(bhad, j.daughter(i)) }
+
+        # transform set to a list
+        bjets = [b for b in bjets]
     
         jcs = [] # will store here all jet constitutents
          
@@ -427,10 +437,10 @@ for ii, fileName in enumerate(fileNames):
             t_dPhijj[0] = 0. if len(genjs) < 2 else round(deltaPhi(genjs[0].phi(), genjs[1].phi())   , 1)
             j1 = genjs[0]
             j2 = genjs[1]
-            cos21 = RPA(j1, j2)
-            cos12 = RPA(j2, j1)
-            t_c21[0]  = round(np.arccos(cos21) , 2)
-            t_c12[0]  = round(np.arccos(cos12) , 2)
+            theta21 = RPA(j1, j2)
+            theta12 = RPA(j2, j1)
+            t_c21[0]  = round(theta21 , 2)
+            t_c12[0]  = round(theta12 , 2)
 
 
         if len(bjets) >= 2:
@@ -440,10 +450,10 @@ for ii, fileName in enumerate(fileNames):
             t_dPhibb[0] = 0. if len(bjets) < 2 else round(deltaPhi(bjets[0].phi(), bjets[1].phi())   , 1)
             b1 = bjets[0]
             b2 = bjets[1]
-            cos21 = RPA(b1, b2)
-            cos12 = RPA(b2, b1)
-            t_b21[0]  = round(np.arccos(cos21) , 2)
-            t_b12[0]  = round(np.arccos(cos12) , 2)
+            theta21 = RPA(b1, b2)
+            theta12 = RPA(b2, b1)
+            t_b21[0]  = round(theta21 , 2)
+            t_b12[0]  = round(theta12 , 2)
         tree.Fill()
     
         
@@ -475,23 +485,26 @@ for ii, fileName in enumerate(fileNames):
             if len(genjs)>0:
                 myjet = genjs[0]
                 ax1.plot( myjet.y() + 0.4 * np.cos(theta), myjet.phi() + 0.4* np.sin(theta), color = 'b')
+                plt.text(myjet.y() + 0.00, myjet.phi() + 0.5,'j1',horizontalalignment='right')
         
             if len(genjs)>1:
                 myjet = genjs[1]
                 ax1.plot( myjet.y() + 0.4 * np.cos(theta), myjet.phi() + 0.4* np.sin(theta), color = 'b')
+                plt.text(myjet.y() + 0.00, myjet.phi() + 0.5,'j2',horizontalalignment='right')
             
             for myjet in genjs[2:]:
-                ax1.plot( myjet.y() + 0.4 * np.cos(theta), myjet.phi() + 0.4* np.sin(theta), color = 'g')
+                ax1.plot( myjet.y() + 0.4 * np.cos(theta), myjet.phi() + 0.4* np.sin(theta), color = 'k')
         
-            for myjet in bjets:
+            for bj,myjet in enumerate(bjets):
                 ax1.plot( myjet.y() + 0.4 * np.cos(theta), myjet.phi() + 0.4* np.sin(theta), color = 'r', linestyle = 'dotted')
+                plt.text(myjet.y() + 0.00, myjet.phi() + 0.5,'b%d'%(bj+1),horizontalalignment='right')
     
-            def draw(x1, y1, x2, y2, color = 'y'):
+            def draw(x1, y1, x2, y2):
                 k    = (y2 - y1)/(x2 - x1)
         
                 xs   = np.linspace( min(x1, x2), max(x1, x2), 101)
                 ys =  k*(xs - x1) + y1
-                ax1.plot( xs , ys , color)
+                ax1.plot( xs , ys , 'r')
                 #ax1.plot( x1 + 0.4 * np.cos(theta), y1 + 0.4* np.sin(theta), color = 'y', linestyle = 'dashed')
         
                 r = ((x2 - x1)**2 + (y2 - y1)**2)**0.5
@@ -538,17 +551,25 @@ for ii, fileName in enumerate(fileNames):
             ax1.set_ylim(-3.2, 3.2)
              
             rad2degrees = 180./np.pi
-            if len(genjs)>1: f.suptitle('mjj %2.1f  ptjj %2.1f  dYjj %2.1f dPjj = %2.1f  \n cosTheta21 = %2.3f cosTheta12 = %2.3f  \n j1  = (%2.1f, %2.1f, %2.1f, %2.2f) j2  = (%2.1f, %2.1f, %2.1f, %2.2f)'%(t_mjj[0], t_ptjj[0], 
+
+            b1Index, b2Index = -1, -1
+            if len(bjets)>1:
+                b1, b2 = bjets[0], bjets[1]
+                b1Index = genjs.index(bjets[0])
+                b2Index = genjs.index(bjets[1])
+             
+
+            if len(genjs)>1: f.suptitle('mjj %2.1f  ptjj %2.1f  dYjj %2.1f dPjj = %2.1f  \n Theta21 = %2.3f Theta12 = %2.3f  \n j1  = (%2.1f, %2.1f, %2.1f, %2.2f) j2  = (%2.1f, %2.1f, %2.1f, %2.2f)'%(t_mjj[0], t_ptjj[0], 
             t_dYjj[0], t_dPhijj[0],
             t_c21[0], t_c12[0],
             genjs[0].pt(), genjs[0].rapidity(), genjs[0].phi(), t_jetPVA[0]*rad2degrees, 
             genjs[1].pt(), genjs[1].rapidity(), genjs[1].phi(), t_jetPVA[1]*rad2degrees, 
             ), size = 12)
-            if len(bjets)>1: f.suptitle('mbb %2.1f  ptbb %2.1f  dYbb %2.1f dPbb = %2.1f  \n cosTheta21 = %2.3f cosTheta12 = %2.3f  \n j1  = (%2.1f, %2.1f, %2.1f, %2.2f) j2  = (%2.1f, %2.1f, %2.1f, %2.2f)'%(t_mbb[0], t_ptbb[0], 
+            if len(bjets)>1 and b1Index<t_nJets[0] and b2Index<t_nJets[0]: f.suptitle('mbb %2.1f  ptbb %2.1f  dYbb %2.1f dPbb = %2.1f  \n Theta21 = %2.3f Theta12 = %2.3f  \n b1  = (%2.1f, %2.1f, %2.1f, %2.2f) b2  = (%2.1f, %2.1f, %2.1f, %2.2f)'%(t_mbb[0], t_ptbb[0], 
             t_dYbb[0], t_dPhibb[0],
-            t_c21[0], t_c12[0],
-            bjets[0].pt(), bjets[0].rapidity(), bjets[0].phi(), t_jetPVA[0]*rad2degrees, 
-            bjets[1].pt(), bjets[1].rapidity(), bjets[1].phi(), t_jetPVA[1]*rad2degrees, 
+            t_b21[0], t_b12[0],
+            bjets[0].pt(), bjets[0].rapidity(), bjets[0].phi(), t_jetPVA[b1Index]*rad2degrees, 
+            bjets[1].pt(), bjets[1].rapidity(), bjets[1].phi(), t_jetPVA[b2Index]*rad2degrees, 
             ), size = 12)
 
             plt.savefig('/afs/cern.ch/user/t/theofil/www/images/'+folder+'/neve%d.png'%iev)
