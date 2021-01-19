@@ -41,15 +41,20 @@ fileName = '/eos/cms/store/cmst3/user/gpetrucc/l1tr/105X/NewInputs104X/010319/VB
 
 #fileName2 = '/eos/cms/store/cmst3/group/l1tr/gpetrucc/11_1_0/NewInputs110X/150720.done/QCD_Pt15to3000_PU200/inputs110X_2.root'
 #fileNames = [fileName, fileName2]
-fileNames = [fileName]
+#fileNames = [fileName]
+
+fileNames =  ["/eos/cms/store/cmst3/user/gpetrucc/l1tr/105X/NewInputs104X/010319/VBFHToBB_PU200/inputs104X_VBFHToBB_PU200_job%d.root"%ii for ii in range(1,101)]
+
 
 # configuration
 #edmStyle = 'MiniAOD'
 edmStyle  = 'AOD'
-makePlots = True
+makePlots = False
+makePlotsTitle = False
+makePlots_xkcd = False
 folders   = ['ZZ', 'VBFHinv','VBFHinv2', 'Minbias','QCD', 'VBFHbb']
 folder    = folders[5]
-maxEvents =  50e3
+maxEvents =  50e5
 debug = False
 useAK8 = False
 chargedOnly = False
@@ -88,12 +93,6 @@ def RPA(j1, j2):
     mag_r = (r.T).dot(r)[0][0]**0.5
     cos21 = (r.T).dot(p)[0][0]/(mag_p*mag_r)
     theta21 = np.arccos(cos21)*(180/np.pi)
-    print('cos21 %2.3f theta21 %2.3f np.arccos(cos21) %2.3f'%(cos21, theta21, np.arccos(cos21)))
-    #extp = np.cross(r, p, axis=0)
-    #print('extp = ', extp, ' (extp.T).dot(extp) = ', (extp.T).dot(extp))
-    #sin21 = (extp.T).dot(extp)**0.5/(mag_p*mag_r)
-    #theta21 = np.arctan2(sin21, cos21)*(180/np.pi)
-    #print('theta21 %2.3f   arccosetheta21 %2.3f'%(theta21, np.arccos(cos21)*(180/np.pi)))
     if debug:
         print('p = ', p)
         print('v2 = ', v2)
@@ -458,13 +457,15 @@ for ii, fileName in enumerate(fileNames):
     
         
         if makePlots:
+            if makePlots_xkcd: plt.xkcd()
+
             plt.rc('font', size=16)
             ### make first subplot
             f, (ax1) = plt.subplots(1, 1, sharex=True, sharey=True, figsize=(11,7))
             cmap = matplotlib.cm.get_cmap('viridis')
         
             collection = [p for p in genps if p.pt()>0.0]
-            #collection = [p for p in jcs]
+            if not makePlotsTitle: collection = [p for p in jcs]
             etas     = map(lambda p:p.y()  , collection) ### it's rapidity that is used in reality
             phis     = map(lambda p:p.phi(), collection)
             pts      = map(lambda p:p.pt() , collection)
@@ -559,13 +560,13 @@ for ii, fileName in enumerate(fileNames):
                 b2Index = genjs.index(bjets[1])
              
 
-            if len(genjs)>1: f.suptitle('mjj %2.1f  ptjj %2.1f  dYjj %2.1f dPjj = %2.1f  \n Theta21 = %2.3f Theta12 = %2.3f  \n j1  = (%2.1f, %2.1f, %2.1f, %2.2f) j2  = (%2.1f, %2.1f, %2.1f, %2.2f)'%(t_mjj[0], t_ptjj[0], 
+            if len(genjs)>1 and makePlotsTitle: f.suptitle('mjj %2.1f  ptjj %2.1f  dYjj %2.1f dPjj = %2.1f  \n Theta21 = %2.3f Theta12 = %2.3f  \n j1  = (%2.1f, %2.1f, %2.1f, %2.2f) j2  = (%2.1f, %2.1f, %2.1f, %2.2f)'%(t_mjj[0], t_ptjj[0], 
             t_dYjj[0], t_dPhijj[0],
             t_c21[0], t_c12[0],
             genjs[0].pt(), genjs[0].rapidity(), genjs[0].phi(), t_jetPVA[0]*rad2degrees, 
             genjs[1].pt(), genjs[1].rapidity(), genjs[1].phi(), t_jetPVA[1]*rad2degrees, 
             ), size = 12)
-            if len(bjets)>1 and b1Index<t_nJets[0] and b2Index<t_nJets[0]: f.suptitle('mbb %2.1f  ptbb %2.1f  dYbb %2.1f dPbb = %2.1f  \n Theta21 = %2.3f Theta12 = %2.3f  \n b1  = (%2.1f, %2.1f, %2.1f, %2.2f) b2  = (%2.1f, %2.1f, %2.1f, %2.2f)'%(t_mbb[0], t_ptbb[0], 
+            if len(bjets)>1 and makePlotsTitle and b1Index<t_nJets[0] and b2Index<t_nJets[0]: f.suptitle('mbb %2.1f  ptbb %2.1f  dYbb %2.1f dPbb = %2.1f  \n Theta21 = %2.3f Theta12 = %2.3f  \n b1  = (%2.1f, %2.1f, %2.1f, %2.2f) b2  = (%2.1f, %2.1f, %2.1f, %2.2f)'%(t_mbb[0], t_ptbb[0], 
             t_dYbb[0], t_dPhibb[0],
             t_b21[0], t_b12[0],
             bjets[0].pt(), bjets[0].rapidity(), bjets[0].phi(), t_jetPVA[b1Index]*rad2degrees, 
@@ -573,6 +574,8 @@ for ii, fileName in enumerate(fileNames):
             ), size = 12)
 
             plt.savefig('/afs/cern.ch/user/t/theofil/www/images/'+folder+'/neve%d.png'%iev)
+            if not makePlotsTitle: plt.savefig('/afs/cern.ch/user/t/theofil/www/images/'+folder+'/neve%d.pdf'%iev)
+
             plt.close('all')
     
     
