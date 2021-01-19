@@ -25,6 +25,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 
 import pdb
+import glob
 
 ### define here filename and max number of events to process
 #fileName = "/eos/cms/store/cmst3/user/gpetrucc/l1tr/105X/NewInputs104X/010319/VBF_HToInvisible_PU0/inputs104X_VBF_HToInvisible_PU0_job1.root"
@@ -40,10 +41,17 @@ fileName = '/eos/cms/store/cmst3/user/gpetrucc/l1tr/105X/NewInputs104X/010319/VB
 
 
 #fileName2 = '/eos/cms/store/cmst3/group/l1tr/gpetrucc/11_1_0/NewInputs110X/150720.done/QCD_Pt15to3000_PU200/inputs110X_2.root'
-#fileNames = [fileName, fileName2]
+
 #fileNames = [fileName]
 
-fileNames =  ["/eos/cms/store/cmst3/user/gpetrucc/l1tr/105X/NewInputs104X/010319/VBFHToBB_PU200/inputs104X_VBFHToBB_PU200_job%d.root"%ii for ii in range(1,101)]
+#fileNames =  ["/eos/cms/store/cmst3/user/gpetrucc/l1tr/105X/NewInputs104X/010319/VBFHToBB_PU200/inputs104X_VBFHToBB_PU200_job%d.root"%ii for ii in range(1,101)]
+#fileNames =  ["/eos/cms/store/cmst3/user/gpetrucc/l1tr/105X/NewInputs104X/010319/VBF_HToInvisible_PU200/inputs104X_VBF_HToInvisible_PU200_job%d.root"%ii for ii in range(1,34)]
+#fileNames =  ["/eos/cms/store/cmst3/user/gpetrucc/l1tr/105X/NewInputs104X/010319/SingleNeutrino_PU200/inputs104X_SingleNeutrino_PU200_job%d.root"%ii for ii in range(1,251)]
+
+#path = "/eos/cms/store/cmst3/user/gpetrucc/l1tr/105X/NewInputs104X/010319/VBF_HToInvisible_PU200/"
+path = "/eos/cms/store/cmst3/group/l1tr/gpetrucc/11_1_0/NewInputs110X/150720.done/QCD_Pt15to3000_PU200/"
+fileNames = glob.glob(path+'*root')
+
 
 
 # configuration
@@ -52,8 +60,9 @@ edmStyle  = 'AOD'
 makePlots = False
 makePlotsTitle = False
 makePlots_xkcd = False
+minimalPrint = False
 folders   = ['ZZ', 'VBFHinv','VBFHinv2', 'Minbias','QCD', 'VBFHbb']
-folder    = folders[5]
+folder    = folders[4]
 maxEvents =  50e5
 debug = False
 useAK8 = False
@@ -188,7 +197,7 @@ if edmStyle == 'MiniAOD':
 
 # start analysis
 for ii, fileName in enumerate(fileNames):
-    print('opening [%d]:'%ii, fileName)
+    if minimalPrint: print('opening [%d]:'%ii, fileName)
     events = Events(fileName)
     count = counter()
     count.maxeve   = maxEvents
@@ -578,9 +587,9 @@ for ii, fileName in enumerate(fileNames):
 
             plt.close('all')
     
-    
-    print("events.size    = %d"%events.size())
-    print("count.alleve   = %d"%count.alleve)
+    if minimalPrint: 
+        print("events.size    = %d"%events.size())
+        print("count.alleve   = %d"%count.alleve)
     
     
     treefile.cd()
